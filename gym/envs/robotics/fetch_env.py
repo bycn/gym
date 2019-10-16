@@ -109,16 +109,26 @@ class FetchEnv(robot_env.RobotEnv):
             achieved_goal = grip_pos.copy()
         else:
             achieved_goal = np.squeeze(object_pos.copy())
-        obs = np.concatenate([
-            grip_pos, object_pos.ravel(), object_rel_pos.ravel(), gripper_state, object_rot.ravel(),
-            object_velp.ravel(), object_velr.ravel(), grip_velp, gripper_vel,
-        ])
-
+        # OLD
+        # obs = np.concatenate([
+        #     grip_pos, object_pos.ravel(), object_rel_pos.ravel(), gripper_state, object_rot.ravel(),
+        #     object_velp.ravel(), object_velr.ravel(), grip_velp, gripper_vel,
+        # ])
+        obs = np.transpose(self.render("rgb_array", 64, 64), (2,0,1))
         return {
             'observation': obs.copy(),
             'achieved_goal': achieved_goal.copy(),
             'desired_goal': self.goal.copy(),
         }
+        #IDEAL
+        # return {
+        #         'observation': {
+        #             'proprioception': obs.copy(),
+        #             'rgb_camera': self.render("rgb_array", 64, 64)            
+        #             },
+        #     'desired_goal': self.goal.copy(),
+        #     'achieved_goal': achieved_goal.copy(),
+        # }
 
     def _viewer_setup(self):
         body_id = self.sim.model.body_name2id('robot0:gripper_link')
