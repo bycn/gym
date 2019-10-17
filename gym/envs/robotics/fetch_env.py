@@ -15,7 +15,7 @@ class FetchEnv(robot_env.RobotEnv):
     def __init__(
         self, model_path, n_substeps, gripper_extra_height, block_gripper,
         has_object, target_in_the_air, target_offset, obj_range, target_range,
-        distance_threshold, initial_qpos, reward_type,
+        distance_threshold, initial_qpos, reward_type, observation_type,
     ):
         """Initializes a new Fetch environment.
 
@@ -42,6 +42,7 @@ class FetchEnv(robot_env.RobotEnv):
         self.target_range = target_range
         self.distance_threshold = distance_threshold
         self.reward_type = reward_type
+        self.observation_type = observation_type
 
         super(FetchEnv, self).__init__(
             model_path=model_path, n_substeps=n_substeps, n_actions=4,
@@ -109,26 +110,19 @@ class FetchEnv(robot_env.RobotEnv):
             achieved_goal = grip_pos.copy()
         else:
             achieved_goal = np.squeeze(object_pos.copy())
-        # OLD
-        # obs = np.concatenate([
-        #     grip_pos, object_pos.ravel(), object_rel_pos.ravel(), gripper_state, object_rot.ravel(),
-        #     object_velp.ravel(), object_velr.ravel(), grip_velp, gripper_vel,
-        # ])
-        obs = np.transpose(self.render("rgb_array", 64, 64), (2,0,1))
+        if self.observation_type == "image":
+            #can parameterize kwargs for the rendering options later
+            obs = np.transpose(self.render("rgb_array", 64, 64), (2,0,1))
+        else:
+            obs = np.concatenate([
+                grip_pos, object_pos.ravel(), object_rel_pos.ravel(), gripper_state, object_rot.ravel(),
+                object_velp.ravel(), object_velr.ravel(), grip_velp, gripper_vel,
+            ])
         return {
             'observation': obs.copy(),
             'achieved_goal': achieved_goal.copy(),
             'desired_goal': self.goal.copy(),
         }
-        #IDEAL
-        # return {
-        #         'observation': {
-        #             'proprioception': obs.copy(),
-        #             'rgb_camera': self.render("rgb_array", 64, 64)            
-        #             },
-        #     'desired_goal': self.goal.copy(),
-        #     'achieved_goal': achieved_goal.copy(),
-        # }
 
     def _viewer_setup(self):
         body_id = self.sim.model.body_name2id('robot0:gripper_link')

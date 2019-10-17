@@ -360,12 +360,18 @@ for reward_type in ['sparse', 'dense']:
         max_episode_steps=50,
     )
 
-    register(
-        id='FetchReach{}-v1'.format(suffix),
-        entry_point='gym.envs.robotics:FetchReachEnv',
-        kwargs=kwargs,
-        max_episode_steps=50,
-    )
+    for observation_type in ['image', 'joint']:
+        obs_suffix = 'Image' if observation_type == 'image' else ''
+        obskwargs = {
+            'reward_type': reward_type,
+            'observation_type': observation_type
+        }
+        register(
+            id='FetchReach{}{}-v1'.format(suffix,obs_suffix ),
+            entry_point='gym.envs.robotics:FetchReachEnv',
+            kwargs=obskwargs,
+            max_episode_steps=50,
+        )
 
     register(
         id='FetchPush{}-v1'.format(suffix),
