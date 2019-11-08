@@ -38,6 +38,8 @@ class RobotEnv(gym.GoalEnv):
 
         self.goal = self._sample_goal()
         obs = self._get_obs()
+        #temporarily manually set shape
+        # obs["observation"] = np.concatenate([obs["observation"] for _ in range(3)])
         self.action_space = spaces.Box(-1., 1., shape=(n_actions,), dtype='float32')
         self.observation_space = spaces.Dict(dict(
             desired_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
@@ -69,6 +71,28 @@ class RobotEnv(gym.GoalEnv):
         }
         reward = self.compute_reward(obs['achieved_goal'], self.goal, info)
         return obs, reward, done, info
+        
+        # TMP: Temporary change! to use action repeats.
+        # action = np.clip(action, self.action_space.low, self.action_space.high)
+        # def one_step():
+        #     self._set_action(action)
+        #     self.sim.step()
+        #     self._step_callback()
+        #     return self._get_obs()
+        # obs = []
+        # for i in range(3):
+        #     obs.append(one_step())
+        # obs = {
+        #     "observation": np.concatenate([o["observation"] for o in obs]),
+        #     "achieved_goal": obs[-1]["achieved_goal"],
+        #     "desired_goal": obs[-1]["desired_goal"]
+        # }
+        # done = False
+        # info = {
+        #     'is_success': self._is_success(obs['achieved_goal'], self.goal),
+        # }
+        # reward = self.compute_reward(obs['achieved_goal'], self.goal, info)
+        # return obs, reward, done, info
 
     def reset(self):
         # Attempt to reset the simulator. Since we randomize initial conditions, it
@@ -82,6 +106,12 @@ class RobotEnv(gym.GoalEnv):
             did_reset_sim = self._reset_sim()
         self.goal = self._sample_goal().copy()
         obs = self._get_obs()
+        # TMP: code for action repeat
+        # obs = {
+        #     "observation": np.concatenate([obs["observation"] for _ in range(3)]),
+        #     "achieved_goal": obs["achieved_goal"],
+        #     "desired_goal": obs["desired_goal"]
+        # }
         return obs
 
     def close(self):
