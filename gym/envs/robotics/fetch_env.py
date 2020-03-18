@@ -112,7 +112,11 @@ class FetchEnv(robot_env.RobotEnv):
             achieved_goal = np.squeeze(object_pos.copy())
         if self.observation_type == "image":
             #can parameterize kwargs for the rendering options later
-            obs = np.transpose(self.render("rgb_array", 64, 64), (2,0,1))
+            # obs = np.transpose(self.render("rgb_array", 64, 64), (2,0,1))
+            # temporary send 1d, which will be reshaped by model.
+            # obs = self.render("rgb_array", 64, 64).flatten()
+            obs = np.transpose(self.render("rgb_array", 64, 64), (2,0,1)).flatten()
+
         else:
             obs = np.concatenate([
                 grip_pos, object_pos.ravel(), object_rel_pos.ravel(), gripper_state, object_rot.ravel(),
@@ -129,9 +133,10 @@ class FetchEnv(robot_env.RobotEnv):
         lookat = self.sim.data.body_xpos[body_id]
         for idx, value in enumerate(lookat):
             self.viewer.cam.lookat[idx] = value
-        self.viewer.cam.distance = 2.5
-        self.viewer.cam.azimuth = 132.
-        self.viewer.cam.elevation = -14.
+        self.viewer.cam.distance = 1.5
+        # self.viewer.cam.azimuth = 132
+        self.viewer.cam.azimuth = 180
+        self.viewer.cam.elevation = -30.
 
     def _render_callback(self):
         # Visualize target.
@@ -164,8 +169,12 @@ class FetchEnv(robot_env.RobotEnv):
             if self.target_in_the_air and self.np_random.uniform() < 0.5:
                 goal[2] += self.np_random.uniform(0, 0.45)
         else:
-            # goal = self.initial_gripper_xpos[:3] + self.np_random.uniform(-0.15, 0.15, size=3)
-            goal = self.initial_gripper_xpos[:3] + 0.10
+            # goal = self.initial_gripper_xpos[:3] + np.array([0,.15,0]) + np.array([self.np_random.uniform(-0.15, 0.15),0,0])
+            goal = self.initial_gripper_xpos[:3] + self.np_random.uniform(-0.15, 0.15, size=3)
+            # goal = self.initial_gripper_xpos[:3] + 0.15
+            #  !!!!!!! GROUND GOALS !!!!!!
+            goal[2] = 0.45
+
         return goal.copy()
 
     def _is_success(self, achieved_goal, desired_goal):
